@@ -1,12 +1,13 @@
-#include <avr/pgmspace.h>
 #include <Wire.h>
 #include <Adafruit_SSD1306.h>
 
 // ----- BUTTON -----
-const uint8_t BUTTON_PIN = 3;
+const uint8_t BUTTON_PIN = 7;
 
 // ----- DISPLAY -----
 const uint8_t
+	DISPLAY_CLOCK = 1,
+	DISPLAY_DATA = 2,
 	DISPLAY_WIDTH = 128,
 	DISPLAY_HEIGHT = 64,
 	DISPLAY_ADDRESS = 0x3C,
@@ -16,18 +17,85 @@ const uint8_t
 Adafruit_SSD1306 oled(DISPLAY_WIDTH, DISPLAY_HEIGHT, &Wire, -1);
 
 // ----- FILES -----
-const int letterLen = 5;
-const char loveLetter[letterLen][DISPLAY_MAX_CHAR+1] PROGMEM = {
-	"hello twin",
-	"i love you <3",
-	"please keep",
-	"yourself safe",
-	":3"
+const int letterLen = 72;
+const char loveLetter[letterLen][DISPLAY_MAX_CHAR+1] = {
+	"Dear Christine",
+	"",
+	"I wrote this letter ",
+	"so I can express how",
+	"I feel about you. ",
+	"",
+	"Ever since I've ",
+	"known you, I've felt",
+	"less depressed and ",
+	"you gave me hope for",
+	"love again. I ",
+	"thought getting a ",
+	"chance from you was ",
+	"just a dream-but you",
+	"actually gave more ",
+	"than that. The way ",
+	"you put effort on ",
+	"trying to chat with ",
+	"me everyday, making ",
+	"me letters, coming ",
+	"with me everywhere, ",
+	"and those ice cream ",
+	"dates? Makes me ",
+	"really happy and ",
+	"feel like I actually",
+	"deserve to be loved ",
+	"and cared. ",
+	"",
+	"Your stunning ",
+	"beauty, cute smile, ",
+	"silly laughs, long ",
+	"yaps, uniqueness, ",
+	"honesty, caring ",
+	"personality, and ",
+	"most of all, ",
+	"kindness, make you ",
+	"the most perfect ",
+	"girl I've ever met. ",
+	"I'm falling harder ",
+	"for you each day and",
+	"I just cant deny it.",
+	"",
+	"I wanted to thank ",
+	"you with all my ",
+	"heart for everything",
+	"you've done for the ",
+	"past weeks, I've ",
+	"never been treated ",
+	"this well in my life",
+	"and I am reallyyy ",
+	"greatful to have ",
+	"you. I hope I'm ",
+	"making you happy the",
+	"same way as well, ",
+	"and I sincerely ",
+	"apologize if I can ",
+	"be a bad person ",
+	"sometimes :( but I ",
+	"promise I'll try to ",
+	"change my flaws and ",
+	"treat you better. ",
+	"",
+	"That's all I wanted ",
+	"to say, pleasee take",
+	"care of yourself ",
+	"everyday and stay ",
+	"safe. I will always ",
+	"be here if you need ",
+	"me. thank you ",
+	"again!! mwaaaa :3 ",
+	"",
+	"- marth <3"
 };
 
 // ----- APPLICATIONS -----
 const uint8_t TOTAL_APPS = 5;
-const char apps[TOTAL_APPS][DISPLAY_MAX_CHAR-1] PROGMEM = {
+const char apps[TOTAL_APPS][DISPLAY_MAX_CHAR-1]  = {
 	"LoveLetter",
 	"ComplimentGen",
 	"StuffIWantedToSay",
@@ -89,7 +157,7 @@ bool handleButton(char holdText[DISPLAY_MAX_CHAR+1]) {
 }
 
 // ----- APPLICATIONS -----
-void TextViewer(char text[][DISPLAY_MAX_CHAR+1], int textLen, char bottomText[DISPLAY_MAX_CHAR+1]) {
+void TextViewer(const char text[][DISPLAY_MAX_CHAR+1], int textLen, char bottomText[DISPLAY_MAX_CHAR+1]) {
 	int currentLine = 0;
 
 	while (true) {
@@ -98,10 +166,7 @@ void TextViewer(char text[][DISPLAY_MAX_CHAR+1], int textLen, char bottomText[DI
 		oled.setCursor(0, 0);
 		int screenMaxItems = currentLine+DISPLAY_MAX_LINES > textLen ? textLen : currentLine+DISPLAY_MAX_LINES;
 		for (int l = currentLine; l < screenMaxItems; l++) {
-			char buffer[DISPLAY_MAX_CHAR+1];
-			strcpy_P(buffer, text[l]);
-
-			oled.println(buffer);
+			oled.println(text[l]);
 		}
 
 		drawBottomBar(bottomText);
@@ -128,6 +193,7 @@ void setup() {
 	pinMode(BUTTON_PIN, INPUT_PULLUP);
 
 	// then display next
+	Wire.begin(DISPLAY_DATA, DISPLAY_CLOCK);
 	oled.begin(SSD1306_SWITCHCAPVCC, DISPLAY_ADDRESS);
 	oled.setTextColor(SSD1306_WHITE);
 
@@ -147,20 +213,14 @@ void loop() {
 		oled.setCursor(0, 0);
 		int screenMaxItems = selectedItem+DISPLAY_MAX_LINES > TOTAL_APPS ? TOTAL_APPS : selectedItem+DISPLAY_MAX_LINES;
 		for (int i = selectedItem; i < screenMaxItems; i++) {
-			char buffer[DISPLAY_MAX_CHAR-1];
-			strcpy_P(buffer, apps[i]);
-
 			oled.print(i == selectedItem ? "> ": "  ");
-			oled.println(buffer);
+			oled.println(apps[i]);
 		}
 
 		oled.display();
 
-		char buffer[DISPLAY_MAX_CHAR-1];
-		strcpy_P(buffer, apps[selectedItem]);
-
 		char bottomText[(DISPLAY_MAX_CHAR-1)+7] = "";
-		sprintf(bottomText, "Launch %s", buffer);
+		sprintf(bottomText, "Launch %s", apps[selectedItem]);
 		if (handleButton(bottomText)) {
 			break;	
 		} else {
