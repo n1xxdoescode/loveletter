@@ -17,8 +17,8 @@ const uint8_t
 Adafruit_SSD1306 oled(DISPLAY_WIDTH, DISPLAY_HEIGHT, &Wire, -1);
 
 // ----- FILES -----
-const int letterLen = 72;
-const char loveLetter[letterLen][DISPLAY_MAX_CHAR+1] = {
+const int loveLetterLen = 72;
+const char loveLetter[loveLetterLen][DISPLAY_MAX_CHAR+1] = {
 	"Dear Christine",
 	"",
 	"I wrote this letter ",
@@ -92,6 +92,39 @@ const char loveLetter[letterLen][DISPLAY_MAX_CHAR+1] = {
 	"",
 	"- marth <3"
 };
+const int aboutTextLen = 30;
+const char aboutText[aboutTextLen][DISPLAY_MAX_CHAR+1] = {
+	"Name",
+	"- Christine",
+	"Firmware",
+	"- LoveBoxOS (Mara's",
+	"  Edition)",
+	"Firmware Version",
+	"- 1.2.67",
+	"GitHub Repository",
+	"- https://github.com/",
+	"  n1xxdoescode/lovele",
+	"  tter",
+	"Board",
+	"- Waveshare ESP32-S3",
+	"  Zero",
+	"SoC",
+	"- ESP32-FH4R2 2CORE",
+	"  240MHz",
+	"Memory",
+	"- 512KB SRAM",
+	"Storage",
+	"- 4MB Flash",
+	"Display",
+	"- 0.96\" OLED 128x64",
+	"  SSD1306 I2C",
+	"Ambient Light",
+	"- WS2812 RGB LED",
+	"Input",
+	"- Generic 6mm Button",
+	"my heart",
+	"- only yours bbg"
+};
 
 // ----- APPLICATIONS -----
 const uint8_t TOTAL_APPS = 5;
@@ -106,6 +139,14 @@ const char apps[TOTAL_APPS][DISPLAY_MAX_CHAR-1]  = {
 
 // ----- BOTTOM BAR HELPERS -----
 void drawBottomBar(char text[DISPLAY_MAX_CHAR+1]) {
+	// rectangle
+	oled.fillRect(
+		0,
+		DISPLAY_HEIGHT-11,
+		DISPLAY_WIDTH,
+		11,
+		0
+	);
 	// line
 	oled.drawLine(
 		0,
@@ -146,7 +187,7 @@ bool handleButton(char holdText[DISPLAY_MAX_CHAR+1]) {
 	long pressStart = millis();
 	delay(80);
 	while (!digitalRead(BUTTON_PIN)) {
-		if (millis() - pressStart >= 200) {
+		if (millis() - pressStart >= 500) {
 			fillBottomBar(holdText);
 			oled.display();
 			isHeld = true;
@@ -164,7 +205,7 @@ void TextViewer(const char text[][DISPLAY_MAX_CHAR+1], int textLen, char bottomT
 		oled.clearDisplay();
 
 		oled.setCursor(0, 0);
-		int screenMaxItems = currentLine+DISPLAY_MAX_LINES > textLen ? textLen : currentLine+DISPLAY_MAX_LINES;
+		int screenMaxItems = currentLine+DISPLAY_MAX_LINES+1 > textLen ? textLen : currentLine+DISPLAY_MAX_LINES+2;
 		for (int l = currentLine; l < screenMaxItems; l++) {
 			oled.println(text[l]);
 		}
@@ -176,13 +217,32 @@ void TextViewer(const char text[][DISPLAY_MAX_CHAR+1], int textLen, char bottomT
 		if (handleButton("Exit")) {
 			break;
 		} else {
-			currentLine = currentLine+1 != textLen ? currentLine+1 : 0;
+			if (currentLine != textLen-1) {
+				for (int p = 1; p <= 8; p++) {
+					oled.clearDisplay();
+
+					oled.setCursor(0, 0-p);
+					for (int l = currentLine; l < screenMaxItems; l++) {
+						oled.println(text[l]);
+					}
+
+					drawBottomBar(bottomText);
+
+					oled.display();
+				}
+			} else {}
+
+			currentLine = currentLine != textLen-1 ? currentLine+1 : 0;
 		}
 	}
 }
 
 void LoveLetter() {
-	TextViewer(loveLetter, letterLen, "03/16/2026");
+	TextViewer(loveLetter, loveLetterLen, "03/16/2026");
+}
+
+void About() {
+	TextViewer(aboutText, aboutTextLen, "About this device");
 }
 
 // ----- STARTUP -----
@@ -239,6 +299,7 @@ void loop() {
 		case 3:
 			break;
 		case 4:
+			About();
 			break;
 	}
 
