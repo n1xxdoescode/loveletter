@@ -15,55 +15,47 @@ const uint8_t
 ;
 Adafruit_SSD1306 oled(DISPLAY_WIDTH, DISPLAY_HEIGHT, &Wire, -1);
 
-// ----- APPLICATIONS -----
-const uint8_t TOTAL_APPS = 7;
-const char apps[TOTAL_APPS][DISPLAY_MAX_CHAR-2] PROGMEM = {
-	"LoveLetter",
-	"StuffIWantedToSay",
-	"nixxGPT",
-	"Settings",
-	"About",
-	"App 6",
-	"App 7"
+// ----- FILES -----
+const int letterLen = 5;
+const char loveLetter[letterLen][DISPLAY_MAX_CHAR+1] PROGMEM = {
+	"hello twin",
+	"i love you <3",
+	"please keep",
+	"yourself safe",
+	":3"
 };
 
-int selectedItem;
-int screenMaxItems;
+// ----- APPLICATIONS -----
+const uint8_t TOTAL_APPS = 5;
+const char apps[TOTAL_APPS][DISPLAY_MAX_CHAR-1] PROGMEM = {
+	"LoveLetter",
+	"ComplimentGen",
+	"StuffIWantedToSay",
+	"Settings",
+	"About"
+};
 
-// ----- TOOLS -----
-char* getString(char* cstr, int cslength) {
-	char buffer[cslength];
-	strcpy_P(buffer, cstr);
-	return buffer;
-}
 
 // ----- BOTTOM BAR HELPERS -----
-void drawBottomBar(char text[DISPLAY_MAX_CHAR+1], int x = 0) {
+void drawBottomBar(char text[DISPLAY_MAX_CHAR+1]) {
 	// line
 	oled.drawLine(
-		x,
+		0,
 		DISPLAY_HEIGHT-10,
 		DISPLAY_WIDTH,
 		DISPLAY_HEIGHT-10,
 		1
 	);
-	oled.fillRect(
-		x,
-		DISPLAY_HEIGHT-9,
-		DISPLAY_WIDTH,
-		10,
-		0
-	);
 
 	// bottom text
-	oled.setCursor(x+1, DISPLAY_HEIGHT-8);
+	oled.setCursor(1, DISPLAY_HEIGHT-8);
 	oled.print(text);
 }
 
-void fillBottomBar(char text[DISPLAY_MAX_CHAR+1], int x = 0) {
+void fillBottomBar(char text[DISPLAY_MAX_CHAR+1]) {
 	// rectangle
 	oled.fillRect(
-		x,
+		0,
 		DISPLAY_HEIGHT-10,
 		DISPLAY_WIDTH,
 		10,
@@ -71,7 +63,7 @@ void fillBottomBar(char text[DISPLAY_MAX_CHAR+1], int x = 0) {
 	);
 
 	// bottom text
-	oled.setCursor(x+1, DISPLAY_HEIGHT-8);
+	oled.setCursor(1, DISPLAY_HEIGHT-8);
 	oled.setTextColor(SSD1306_BLACK);
 	oled.print(text);
 
@@ -79,7 +71,7 @@ void fillBottomBar(char text[DISPLAY_MAX_CHAR+1], int x = 0) {
 }
 
 // ----- BUTTON HANDLER -----
-bool handleButton(char bottomText[DISPLAY_MAX_CHAR+1]) {
+bool handleButton(char holdText[DISPLAY_MAX_CHAR+1]) {
 	bool isHeld = false;
 
 	while (digitalRead(BUTTON_PIN)) {}
@@ -87,7 +79,7 @@ bool handleButton(char bottomText[DISPLAY_MAX_CHAR+1]) {
 	delay(80);
 	while (!digitalRead(BUTTON_PIN)) {
 		if (millis() - pressStart >= 200) {
-			fillBottomBar(bottomText);
+			fillBottomBar(holdText);
 			oled.display();
 			isHeld = true;
 		}
@@ -97,23 +89,46 @@ bool handleButton(char bottomText[DISPLAY_MAX_CHAR+1]) {
 }
 
 // ----- APPLICATIONS -----
+void TextViewer(char text[][DISPLAY_MAX_CHAR+1], int textLen, char bottomText[DISPLAY_MAX_CHAR+1]) {
+	int currentLine = 0;
+
+	while (true) {
+		oled.clearDisplay();
+
+		oled.setCursor(0, 0);
+		int screenMaxItems = currentLine+DISPLAY_MAX_LINES > textLen ? textLen : currentLine+DISPLAY_MAX_LINES;
+		for (int l = currentLine; l < screenMaxItems; l++) {
+			char buffer[DISPLAY_MAX_CHAR+1];
+			strcpy_P(buffer, text[l]);
+
+			oled.println(buffer);
+		}
+
+		drawBottomBar(bottomText);
+
+		oled.display();
+
+		if (handleButton("Exit")) {
+			break;
+		} else {
+			currentLine = currentLine+1 != textLen ? currentLine+1 : 0;
+		}
+	}
+}
+
 void LoveLetter() {
-	oled.clearDisplay();
-	oled.setCursor(0, 0);
-	oled.print("hello :3");
-	oled.display();
-	handleButton("Continue");
+	TextViewer(loveLetter, letterLen, "03/16/2026");
 }
 
 // ----- STARTUP -----
 void setup() {
+	// light stuff first
 	Serial.begin(115200);
 
 	pinMode(BUTTON_PIN, INPUT_PULLUP);
 
+	// then display next
 	oled.begin(SSD1306_SWITCHCAPVCC, DISPLAY_ADDRESS);
-	Wire.setClock(400000);
-
 	oled.setTextColor(SSD1306_WHITE);
 
 	oled.clearDisplay();
@@ -121,68 +136,34 @@ void setup() {
 }
 
 // ----- LOOP AS APP LAUNCHER -----
-void drawAppList(int x = 0, int y = 0) {
-	oled.setCursor(x, y);
-	screenMaxItems = selectedItem+DISPLAY_MAX_LINES+2 > TOTAL_APPS ? TOTAL_APPS : selectedItem+DISPLAY_MAX_LINES+2;
-	for (int i = selectedItem, h = 0; i < screenMaxItems; i++, h++) {
-		oled.setCursor(x, y+8*h);
-
-		char buffer[DISPLAY_MAX_CHAR-2];
-		strcpy_P(buffer, apps[i]);
-
-		oled.print(i == selectedItem ? "> ": "  ");
-		oled.print(buffer);
-	}
-}
-
 void loop() {
-	selectedItem = 0;
-	screenMaxItems = 0;
-
-	oled.setTextWrap(false);
-	for (int x = DISPLAY_WIDTH; x > 0; x = x - (x>64?32:16)) {
-		oled.clearDisplay();
-
-		drawAppList(x);
-		drawBottomBar("Home", x);
-
-		oled.display();
-	} 
+	int selectedItem = 0;
 
 	while (true) {
 		oled.clearDisplay();
 
-		drawAppList();
 		drawBottomBar("Home");
+
+		oled.setCursor(0, 0);
+		int screenMaxItems = selectedItem+DISPLAY_MAX_LINES > TOTAL_APPS ? TOTAL_APPS : selectedItem+DISPLAY_MAX_LINES;
+		for (int i = selectedItem; i < screenMaxItems; i++) {
+			char buffer[DISPLAY_MAX_CHAR-1];
+			strcpy_P(buffer, apps[i]);
+
+			oled.print(i == selectedItem ? "> ": "  ");
+			oled.println(buffer);
+		}
 
 		oled.display();
 
-		char buffer[DISPLAY_MAX_CHAR-2];
+		char buffer[DISPLAY_MAX_CHAR-1];
 		strcpy_P(buffer, apps[selectedItem]);
 
-		char bottomText[27] = "";
+		char bottomText[(DISPLAY_MAX_CHAR-1)+7] = "";
 		sprintf(bottomText, "Launch %s", buffer);
 		if (handleButton(bottomText)) {
 			break;	
 		} else {
-			if (selectedItem != TOTAL_APPS-1) {
-				for (int p = 1; p < 8; p = p+(p>3?1:2)) {
-					oled.clearDisplay();
-
-					oled.setCursor(0, -p);
-					for (int i = selectedItem; i < screenMaxItems; i++) {
-						oled.print(selectedItem+1 == i ? "> " : "  ");
-						char buffer[DISPLAY_MAX_CHAR-2];
-						strcpy_P(buffer, apps[i]);
-						oled.println(buffer);
-					}
-
-					drawBottomBar("Home");
-
-					oled.display();
-				}
-			} else {}
-
 			selectedItem = selectedItem != TOTAL_APPS-1 ? selectedItem+1 : 0;
 		}
 	}
