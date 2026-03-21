@@ -2,19 +2,81 @@
 #include <Adafruit_SSD1306.h>
 
 // ----- BUTTON -----
-const uint8_t BUTTON_PIN = 7;
+const uint8_t BUTTON_PIN = 6;
 
 // ----- DISPLAY -----
 const uint8_t
 	DISPLAY_CLOCK = 1,
 	DISPLAY_DATA = 2,
 	DISPLAY_WIDTH = 128,
-	DISPLAY_HEIGHT = 64,
 	DISPLAY_ADDRESS = 0x3C,
 	DISPLAY_MAX_CHAR = 21,
 	DISPLAY_MAX_LINES = 6
 ;
+uint8_t DISPLAY_HEIGHT = 64;
 Adafruit_SSD1306 oled(DISPLAY_WIDTH, DISPLAY_HEIGHT, &Wire, -1);
+
+// ----- BOTTOM BAR HELPERS -----
+void drawBottomBar(char text[DISPLAY_MAX_CHAR+1], const unsigned char icon[8]) {
+	// rectangle
+	oled.fillRect(
+		0,
+		DISPLAY_HEIGHT-11,
+		DISPLAY_WIDTH,
+		11,
+		0
+	);
+	// line
+	oled.drawLine(
+		0,
+		DISPLAY_HEIGHT-10,
+		DISPLAY_WIDTH,
+		DISPLAY_HEIGHT-10,
+		1
+	);
+
+	// bottom text
+	oled.setCursor(1, DISPLAY_HEIGHT-8);
+	oled.print(text);
+
+	oled.drawBitmap(DISPLAY_WIDTH-10, DISPLAY_HEIGHT-8, icon, 8, 8, 1);
+}
+
+void fillBottomBar(char text[DISPLAY_MAX_CHAR+1]) {
+	// rectangle
+	oled.fillRect(
+		0,
+		DISPLAY_HEIGHT-10,
+		DISPLAY_WIDTH,
+		10,
+		1
+	);
+
+	// bottom text
+	oled.setCursor(1, DISPLAY_HEIGHT-8);
+	oled.setTextColor(SSD1306_BLACK);
+	oled.print(text);
+
+	oled.setTextColor(SSD1306_WHITE);
+}
+
+// ----- BUTTON HANDLER -----
+bool handleButton(char holdText[DISPLAY_MAX_CHAR+1]) {
+	bool isHeld = false;
+
+	while (digitalRead(BUTTON_PIN)) {}
+	long pressStart = millis();
+	delay(80);
+	while (!digitalRead(BUTTON_PIN)) {
+		if (millis() - pressStart >= 300) {
+			fillBottomBar(holdText);
+			oled.display();
+			isHeld = true;
+		}
+	}
+
+	return isHeld;
+}
 
 // ----- FILES -----
 const int loveLetterLen = 72;
@@ -26,7 +88,7 @@ const char loveLetter[loveLetterLen][DISPLAY_MAX_CHAR+1] = {
 	"I feel about you. ",
 	"",
 	"Ever since I've ",
-	"known you, I've felt",
+	"met you, I've felt",
 	"less depressed and ",
 	"you gave me hope for",
 	"love again. I ",
@@ -41,11 +103,11 @@ const char loveLetter[loveLetterLen][DISPLAY_MAX_CHAR+1] = {
 	"me letters, coming ",
 	"with me everywhere, ",
 	"and those ice cream ",
-	"dates? Makes me ",
+	"dates? Make me ",
 	"really happy and ",
 	"feel like I actually",
 	"deserve to be loved ",
-	"and cared. ",
+	"and cared for. ",
 	"",
 	"Your stunning ",
 	"beauty, cute smile, ",
@@ -56,7 +118,7 @@ const char loveLetter[loveLetterLen][DISPLAY_MAX_CHAR+1] = {
 	"most of all, ",
 	"kindness, make you ",
 	"the most perfect ",
-	"girl I've ever met. ",
+	"girl in my eyes. ",
 	"I'm falling harder ",
 	"for you each day and",
 	"I just cant deny it.",
@@ -92,10 +154,12 @@ const char loveLetter[loveLetterLen][DISPLAY_MAX_CHAR+1] = {
 	"",
 	"- marth <3"
 };
-const int aboutTextLen = 30;
+const int aboutTextLen = 32;
 const char aboutText[aboutTextLen][DISPLAY_MAX_CHAR+1] = {
 	"Name",
 	"- Christine",
+	"Device",
+	"- LoveBoard OLED",
 	"Firmware",
 	"- LoveBoxOS (Mara's",
 	"  Edition)",
@@ -125,92 +189,122 @@ const char aboutText[aboutTextLen][DISPLAY_MAX_CHAR+1] = {
 	"my heart",
 	"- only yours bbg"
 };
+const int siwtsLen = 17;
+const char siwts[siwtsLen][96] = {
+	"you're the cutest\nthing ever",
+	"i really like your\npersonality :3",
+	"you make my heart\nmelt",
+	"always eat on time,\nokay??",
+	"you're the best thing\nthat happened to me",
+	"i wish we could hang\nout more",
+	"i really love it when\nwe link arms (i wish\nfor holding hands\nnext HEHEHE)",
+	"this device shows how\nmuch effort i can\ndo for us :3",
+	"i am very glad that i\nmet you :3",
+	"i really love being\nby your side",
+	"just so you know,\nyour smile is the\nmost beautiful\nthing ever",
+	"sorry for being\nstupid or bad\nsometimes :(",
+	"i am willing to\nchange my bad habits\njust for you",
+	"= me + you\n= meant to be",
+	"sorry for being ugly\nToT",
+	"your imperfections\nmake you 101\%\nperfect :3",
+	"please dont leave me"
+};
 
 // ----- APPLICATIONS -----
 const uint8_t TOTAL_APPS = 5;
 const char apps[TOTAL_APPS][DISPLAY_MAX_CHAR-1]  = {
 	"LoveLetter",
-	"ComplimentGen",
 	"StuffIWantedToSay",
+	"nixxGPT",
 	"Settings",
 	"About"
 };
-
-
-// ----- BOTTOM BAR HELPERS -----
-void drawBottomBar(char text[DISPLAY_MAX_CHAR+1]) {
-	// rectangle
-	oled.fillRect(
-		0,
-		DISPLAY_HEIGHT-11,
-		DISPLAY_WIDTH,
-		11,
-		0
-	);
-	// line
-	oled.drawLine(
-		0,
-		DISPLAY_HEIGHT-10,
-		DISPLAY_WIDTH,
-		DISPLAY_HEIGHT-10,
-		1
-	);
-
-	// bottom text
-	oled.setCursor(1, DISPLAY_HEIGHT-8);
-	oled.print(text);
-}
-
-void fillBottomBar(char text[DISPLAY_MAX_CHAR+1]) {
-	// rectangle
-	oled.fillRect(
-		0,
-		DISPLAY_HEIGHT-10,
-		DISPLAY_WIDTH,
-		10,
-		1
-	);
-
-	// bottom text
-	oled.setCursor(1, DISPLAY_HEIGHT-8);
-	oled.setTextColor(SSD1306_BLACK);
-	oled.print(text);
-
-	oled.setTextColor(SSD1306_WHITE);
-}
-
-// ----- BUTTON HANDLER -----
-bool handleButton(char holdText[DISPLAY_MAX_CHAR+1]) {
-	bool isHeld = false;
-
-	while (digitalRead(BUTTON_PIN)) {}
-	long pressStart = millis();
-	delay(80);
-	while (!digitalRead(BUTTON_PIN)) {
-		if (millis() - pressStart >= 500) {
-			fillBottomBar(holdText);
-			oled.display();
-			isHeld = true;
-		}
+const unsigned char icons[TOTAL_APPS+2][8] = {
+	{
+		0b00000000,
+		0b00000000,
+		0b00000000,
+		0b00000000,
+		0b00000000,
+		0b00000000,
+		0b00000000,
+		0b00000000
+	},
+	{
+		0b00011000,
+		0b00111100,
+		0b01111110,
+		0b11111111,
+		0b01000010,
+		0b01000010,
+		0b01111110,
+		0b00000000
+	},
+	{
+		0b00000000,
+		0b01111110,
+		0b11000011,
+		0b10100101,
+		0b10011001,
+		0b10000001,
+		0b11111111,
+		0b00000000
+	},
+	{
+		0b01100110,
+		0b10011001,
+		0b10000001,
+		0b10000001,
+		0b01000010,
+		0b00100100,
+		0b00011000,
+		0b00000000
+	},
+	{
+		0b00000000,
+		0b00000000,
+		0b00011000,
+		0b00011000,
+		0b00000000,
+		0b00111100,
+		0b01000010,
+		0b00000000
+	},
+	{
+		0b00000000,
+		0b01111110,
+		0b00000000,
+		0b01111110,
+		0b00000000,
+		0b01111110,
+		0b00000000,
+		0b00000000
+	},
+	{
+		0b00111000,
+		0b01000100,
+		0b10010010,
+		0b10000010,
+		0b10010010,
+		0b01010100,
+		0b00111000,
+		0b00000000
 	}
+};
 
-	return isHeld;
-}
-
-// ----- APPLICATIONS -----
-void TextViewer(const char text[][DISPLAY_MAX_CHAR+1], int textLen, char bottomText[DISPLAY_MAX_CHAR+1]) {
+void TextViewer(const char text[][DISPLAY_MAX_CHAR+1], int textLen, char bottomText[DISPLAY_MAX_CHAR+1], const unsigned char icon[8]) {
 	int currentLine = 0;
 
 	while (true) {
 		oled.clearDisplay();
 
 		oled.setCursor(0, 0);
-		int screenMaxItems = currentLine+DISPLAY_MAX_LINES+1 > textLen ? textLen : currentLine+DISPLAY_MAX_LINES+2;
+		int screenMaxItems = currentLine+DISPLAY_MAX_LINES+2 > textLen ? textLen : currentLine+DISPLAY_MAX_LINES+2;
 		for (int l = currentLine; l < screenMaxItems; l++) {
 			oled.println(text[l]);
 		}
 
-		drawBottomBar(bottomText);
+		drawBottomBar(bottomText, icon);
 
 		oled.display();
 
@@ -226,7 +320,7 @@ void TextViewer(const char text[][DISPLAY_MAX_CHAR+1], int textLen, char bottomT
 						oled.println(text[l]);
 					}
 
-					drawBottomBar(bottomText);
+					drawBottomBar(bottomText, icon);
 
 					oled.display();
 				}
@@ -237,12 +331,111 @@ void TextViewer(const char text[][DISPLAY_MAX_CHAR+1], int textLen, char bottomT
 	}
 }
 
+void LoadingScreen(char bottomText[DISPLAY_MAX_CHAR-1], const unsigned char icon[8]) {
+	for (int p = -30; p <= DISPLAY_WIDTH; p = p+2) {
+		oled.clearDisplay();
+
+		oled.drawLine(p, DISPLAY_HEIGHT-10, p+30, DISPLAY_HEIGHT-10, 1);
+
+		oled.drawBitmap(1, DISPLAY_HEIGHT-8, icon, 8, 8, 1);
+
+		oled.setCursor(11, DISPLAY_HEIGHT-8);
+		oled.print(bottomText);
+
+		oled.display();
+	}
+}
+
 void LoveLetter() {
-	TextViewer(loveLetter, loveLetterLen, "03/16/2026");
+	TextViewer(loveLetter, loveLetterLen, "03/16/2026", icons[2]);
+}
+
+void StuffIWantedToSay() {
+	int currentMessage = 0;
+
+	while (true) {
+		oled.clearDisplay();
+
+		oled.setCursor(0, 0);
+		oled.print(siwts[currentMessage]);
+
+		drawBottomBar("Marth says...", icons[3]);
+
+		oled.display();
+
+		if (handleButton("Exit")) {
+			break;
+		} else {
+			currentMessage = currentMessage != siwtsLen-1 ? currentMessage+1 : 0;
+		}
+	}
+}
+
+void Settings() {
+	bool isRunning = true;
+
+	const uint8_t TOTAL_SETTINGS = 3;
+	char settings[TOTAL_SETTINGS][DISPLAY_MAX_CHAR-1] = {
+		"Brightness",
+		"High Refresh Mode",
+		"Back"
+	};
+
+	while (isRunning) {
+		int selectedItem = 0;
+
+		while (true) {
+			oled.clearDisplay();
+
+			oled.setCursor(0, 0);
+			int screenMaxItems = selectedItem+DISPLAY_MAX_LINES+2 > TOTAL_SETTINGS ? TOTAL_SETTINGS : selectedItem+DISPLAY_MAX_LINES+2;
+			for (int i = selectedItem; i < screenMaxItems; i++) {
+				oled.print(selectedItem == i ? "> " : "  ");
+				oled.println(settings[i]);
+			}
+
+			drawBottomBar("Settings", icons[5]);
+
+			oled.display();
+
+			if (handleButton(settings[selectedItem])) {
+				break;
+			} else {
+				if (selectedItem != TOTAL_SETTINGS-1) {
+					for (int p = 1; p <= 8; p++) {
+						oled.clearDisplay();
+
+						oled.setCursor(0, 0-p);
+						for (int i = selectedItem; i < screenMaxItems; i++) {
+							oled.print("  ");
+							oled.println(settings[i]);
+						}
+
+						oled.setCursor(0, 0);
+						oled.print(">");
+
+						drawBottomBar("Settings", icons[5]);
+
+						oled.display();
+					}
+				}
+				selectedItem = selectedItem != TOTAL_SETTINGS-1 ? selectedItem+1 : 0;
+			}
+		}
+		switch (selectedItem) {
+			case 0:
+				break;
+			case 1:
+				break;
+			case 2:
+				isRunning = false;
+				break;
+		}
+	}
 }
 
 void About() {
-	TextViewer(aboutText, aboutTextLen, "About this device");
+	TextViewer(aboutText, aboutTextLen, "About this device", icons[6]);
 }
 
 // ----- STARTUP -----
@@ -259,23 +452,68 @@ void setup() {
 
 	oled.clearDisplay();
 	oled.display();
+
+	for (int i = 0; i < 2; i++) {
+		for (int p = -30; p <= DISPLAY_WIDTH; p = p+2) {
+			oled.clearDisplay();
+
+			oled.setTextSize(2);
+			oled.setCursor(0, 0);
+			oled.print("LoveBox");
+			oled.setTextSize(1);
+			oled.setCursor(0, 16);
+			if (DISPLAY_HEIGHT == 64) {
+				oled.print("Mara's Edition");
+			}
+
+			oled.drawLine(p, DISPLAY_HEIGHT-10, p+30, DISPLAY_HEIGHT-10, 1);
+			oled.setCursor(1, DISPLAY_HEIGHT-8);
+			oled.print("Starting up...");
+
+			oled.display();
+		}
+	}
+	for (int p = DISPLAY_WIDTH; p > 0; p = p - 4) {
+		oled.clearDisplay();
+
+		oled.drawLine(p, DISPLAY_HEIGHT-10, DISPLAY_WIDTH-1, DISPLAY_HEIGHT-10, 1);
+
+		oled.display();
+	}	
 }
 
 // ----- LOOP AS APP LAUNCHER -----
 void loop() {
 	int selectedItem = 0;
 
+	for (int p = DISPLAY_HEIGHT; p > 0; p = p - 4) {
+		oled.clearDisplay();
+
+		oled.setCursor(0, p);
+		int screenMaxItems = selectedItem+DISPLAY_MAX_LINES+2 > TOTAL_APPS ? TOTAL_APPS : selectedItem+DISPLAY_MAX_LINES+2;
+		for (int i = selectedItem; i < TOTAL_APPS; i++) {
+			oled.print("  ");
+			oled.println(apps[i]);
+		}
+
+		drawBottomBar("Home", icons[1]);
+
+		oled.display();
+	}
+
 	while (true) {
 		oled.clearDisplay();
 
-		drawBottomBar("Home");
-
 		oled.setCursor(0, 0);
-		int screenMaxItems = selectedItem+DISPLAY_MAX_LINES > TOTAL_APPS ? TOTAL_APPS : selectedItem+DISPLAY_MAX_LINES;
+		int screenMaxItems = selectedItem+DISPLAY_MAX_LINES+2 > TOTAL_APPS ? TOTAL_APPS : selectedItem+DISPLAY_MAX_LINES+2;
 		for (int i = selectedItem; i < screenMaxItems; i++) {
-			oled.print(i == selectedItem ? "> ": "  ");
+			oled.print("  ");
 			oled.println(apps[i]);
 		}
+
+		oled.drawBitmap(2, 0, icons[selectedItem+2], 8, 8, 1);
+
+		drawBottomBar("Home", icons[1]);
 
 		oled.display();
 
@@ -284,21 +522,43 @@ void loop() {
 		if (handleButton(bottomText)) {
 			break;	
 		} else {
-			selectedItem = selectedItem != TOTAL_APPS-1 ? selectedItem+1 : 0;
+			for (int p = 1; p <= 8; p++) {
+				oled.clearDisplay();
+
+				oled.setCursor(0, 0-p);
+				for (int l = selectedItem; l < screenMaxItems; l++) {
+					oled.print("  ");
+					oled.println(apps[l]);
+				}
+
+				drawBottomBar("Home", icons[1]);
+
+				oled.display();
+			}
+			selectedItem = selectedItem+1;
+			if (selectedItem == TOTAL_APPS) {
+				break;
+			}
 		}
 	}
 
 	switch (selectedItem) {
 		case 0:
+			LoadingScreen("LoveLetter", icons[2]);
 			LoveLetter();
 			break;
 		case 1:
+			LoadingScreen("StuffIWantedToSay", icons[3]);
+			StuffIWantedToSay();
 			break;
 		case 2:
 			break;
 		case 3:
+			LoadingScreen("Settings", icons[5]);
+			Settings();
 			break;
 		case 4:
+			LoadingScreen("About", icons[6]);
 			About();
 			break;
 	}
