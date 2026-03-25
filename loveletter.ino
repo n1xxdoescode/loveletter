@@ -252,22 +252,26 @@ const char aboutText[aboutTextLen][DISPLAY_MAX_CHAR+1] = {
 	"my heart",
 	"- only yours bbg"
 };
-const int loveBoxLen = 21;
+const int loveBoxLen = 25;
 const char loveBox[loveBoxLen][96] = {
-	"you're the prettiest\ngirl ever",
+	"i could stare at\nyou for hours",
 	"i really like your\npersonality :3",
 	"you make my heart\nmelt",
 	"always eat on time,\nokay??",
 	"you're the best thing\nthat's happened to me",
 	"i wish we could hang\nout more",
+	"you're the prettiest\ngirl ever frfr",
 	"i have a crush on\nyou...",
 	"i really love it when\nwe link arms (i wish\nfor holding hands\nnext HEHEHE)",
 	"this device shows how\nmuch effort i can\ndo for us :3",
 	"i am very glad that i\nmet you :3",
+	"in a field full of\nflowers, you're\nthe one that i'd\npick<3",
 	"i really love being\nclingy around you",
 	"just so you know,\nyour smile is the\nmost beautiful\nthing ever",
 	"i really, really\nmiss you :(",
+	"i think about you\nalmost every minute",
 	"sorry for being\nstupid or immature\nsometimes :(",
+	"do you still like me?",
 	"i really love it when\nyoure honest on\nsomething :)",
 	"i am willing to\nchange my bad habits\njust for you",
 	"= me + you\n= meant to be\nYIEEEHEHEHEHEEE",
@@ -482,7 +486,7 @@ void LoadingScreen(char bottomText[DISPLAY_MAX_CHAR-1], const unsigned char icon
 }
 
 void Tutorial() {
-	Dialog("Hi, Mara!\nIt seems like it's\nyour first time using\nthis.. Let me help!", "Click Button", "sure why not", icons[0]);
+	Dialog("Haiii Maraaa!\nIt seems like it's\nyour first time using\nthis, let me help!", "Press Button ->", "sure why not", icons[0]);
 	while (true) {
 		if (!Dialog("To cycle between\nitems or scroll text,\nsimply press the\nbutton!\n(Press the button)", "Tutorial", "bro i said press", icons[2])) {break;}
 	}
